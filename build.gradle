@@ -17,7 +17,8 @@ application {
 }
 
 
-task(runStreams, dependsOn: 'classes', type: JavaExec) {
-   main = 'com.kafka.stream.StreamsMain'
+task(runStatelessTransformations, dependsOn: 'classes', type: JavaExec) {
+   main = 'com.kafka.stream.StatelessTransformationsMain'
    classpath = sourceSets.main.runtimeClasspath
 }
+

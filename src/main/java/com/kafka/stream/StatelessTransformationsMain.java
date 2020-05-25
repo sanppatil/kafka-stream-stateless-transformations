@@ -15,6 +15,7 @@ import org.apache.kafka.streams.kstream.KStream;
 
 public class StatelessTransformationsMain {
 
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		// Set up the configuration.
 		final Properties props = new Properties();

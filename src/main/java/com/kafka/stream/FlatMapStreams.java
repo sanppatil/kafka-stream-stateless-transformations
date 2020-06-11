@@ -1,21 +1,24 @@
 package com.kafka.stream;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 
-public class BranchStreams {
+public class FlatMapStreams {
 
 	public static void main(String[] args) {
 		// Set up the configuration.
 		final Properties props = new Properties();
-		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "branch-stream");
+		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "flatmap-stream");
 		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -23,17 +26,16 @@ public class BranchStreams {
 
 		// Get the source stream.
 		final StreamsBuilder builder = new StreamsBuilder();
-		final KStream<String, String> source = builder.stream("streams-branch-topic");
+		final KStream<String, String> source = builder.stream("streams-flatmap-input-topic");
 
-		@SuppressWarnings("unchecked")
-		KStream<String, String>[] branches = source.branch((key, value) -> (key.length() % 2) == 0,
-				(key, value) -> true);
+		KStream<String, String> flatMapStream = source.flatMap((key, value) -> {
+			 List<KeyValue<String, String>> result = new LinkedList<>();
+	            result.add(KeyValue.pair(key, value.toUpperCase()));
+	            result.add(KeyValue.pair(key, value.toLowerCase()));
+	            return result;
+		});
 
-		KStream<String, String> evenKeysStream = branches[0];
-		KStream<String, String> oddKeysStream = branches[1];
-
-		evenKeysStream.to("streams-even-key-topic");
-		oddKeysStream.to("streams-odd-key-topic");
+		flatMapStream.to("streams-flatmap-output-topic");
 
 		final Topology topology = builder.build();
 		final KafkaStreams streams = new KafkaStreams(topology, props);

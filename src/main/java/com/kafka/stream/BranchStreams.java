@@ -41,8 +41,7 @@ public class BranchStreams {
 		System.out.println(topology.describe());
 		final CountDownLatch latch = new CountDownLatch(1);
 
-		// Attach a shutdown handler to catch control-c and terminate the application
-		// gracefully.
+		// Attach a shutdown handler to catch control-c and terminate gracefully.
 		Runtime.getRuntime().addShutdownHook(new Thread("shutdown-hook") {
 			@Override
 			public void run() {

@@ -10,12 +10,12 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 
-public class FilterStreams {
+public class ForEachStreams {
 
 	public static void main(String[] args) {
 		// Set up the configuration.
 		final Properties props = new Properties();
-		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "filter-stream");
+		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "foreach-stream");
 		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -23,14 +23,15 @@ public class FilterStreams {
 
 		// Get the source stream.
 		final StreamsBuilder builder = new StreamsBuilder();
-		final KStream<String, String> source = builder.stream("streams-filter-topic");
+		final KStream<String, String> source = builder.stream("streams-foreach-input-topic");
 
-		KStream<String, String> evenKeysStream = source.filter((key, value) -> (key.length() % 2) == 0);
-
-		evenKeysStream.to("streams-even-key-topic");
+		source.foreach((key, value) -> {
+			System.out.println("Key : " + key + " Value : " + value);
+		});
 
 		final Topology topology = builder.build();
 		final KafkaStreams streams = new KafkaStreams(topology, props);
+		
 		// Print the topology to the console.
 		System.out.println(topology.describe());
 		final CountDownLatch latch = new CountDownLatch(1);

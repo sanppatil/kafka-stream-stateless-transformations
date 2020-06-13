@@ -5,17 +5,18 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 
-public class FilterStreams {
+public class MapStreams {
 
 	public static void main(String[] args) {
 		// Set up the configuration.
 		final Properties props = new Properties();
-		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "filter-stream");
+		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "map-stream");
 		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 		props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -23,11 +24,12 @@ public class FilterStreams {
 
 		// Get the source stream.
 		final StreamsBuilder builder = new StreamsBuilder();
-		final KStream<String, String> source = builder.stream("streams-filter-topic");
+		final KStream<String, String> source = builder.stream("streams-map-input-topic");
 
-		KStream<String, String> evenKeysStream = source.filter((key, value) -> (key.length() % 2) == 0);
+		KStream<String, String> mapStream = source
+				.map((key, value) -> KeyValue.pair(key.toUpperCase(), value.toUpperCase()));
 
-		evenKeysStream.to("streams-even-key-topic");
+		mapStream.to("streams-map-output-topic");
 
 		final Topology topology = builder.build();
 		final KafkaStreams streams = new KafkaStreams(topology, props);
